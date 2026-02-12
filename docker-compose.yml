@@ -1,0 +1,17 @@
+services:
+  # This represents your AWS RDS instance locally
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: fooddash_database
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hsda232nsa!2311
+      POSTGRES_DB: fooddash_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
