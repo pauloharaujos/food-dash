@@ -1,0 +1,51 @@
+generator client {
+  provider        = "prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  street       String
+  city         String
+  state        String
+  zipcode      String
+  country      String   @default("US")
+  phone        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders       Order[]  @relation("orderAddress")
+}
+
+model Order {
+  id                  Int      @id @default(autoincrement())
+  addressId           Int
+  subtotal            Float
+  total               Float
+  status              String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  address             Address     @relation("orderAddress", fields: [addressId], references: [id])
+  orderItems          OrderItem[]
+  
+  @@index([id])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  quantity  Int
+  price     Float
+  name      String
+  sku       String
+  createdAt DateTime @default(now())
+  
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+}
