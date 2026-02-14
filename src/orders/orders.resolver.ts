@@ -27,6 +27,24 @@ export class OrderResolver {
         } as unknown as Order;
     }
 
+    @Query(() => [Order], { nullable: true })
+    async getOrderHistory(): Promise<Order[] | null>{
+        const result = await this.orderService.getOrderHistory();
+
+        if (!result) return null;
+
+        return result.map((order) => ({
+            ...order,
+            id: String(order.id),
+            address: order.address,
+            orderItems: order.orderItems.map((item: { id: number }) => ({
+                ...item,
+                id: String(item.id)
+            })),
+            subTotal: order.subtotal
+        } as unknown as Order));
+    }
+
     @ResolveField()
     async address(@Parent() order: { id: string }){
         const { id } = order;

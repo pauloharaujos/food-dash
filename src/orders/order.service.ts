@@ -28,6 +28,18 @@ export class OrderService {
         return order;
     }
 
+    async getOrderHistory(): Promise<OrderWithDetails[] | null> {
+        const orders = prisma.order.findMany({
+            take: 100,
+            include: {
+                address: true,
+                orderItems: true
+            }
+        });
+
+        return orders;
+    }
+
     async saveOrder(orderPayload: CreateOrderDto): Promise<OrderWithDetails | null> {
         const { order } = orderPayload;
 

@@ -66,7 +66,7 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
         this.orderService.updateOrderStatus(orderData);
       }
 
-      // TODO: Aqui entra a chamada para o Redis PubSub para atualizar o Frontend
+      // TODO: Publish to Redis PubSub
       
     } catch (error) {
       this.logger.error(`Failed to process message: ${error.message}`);
