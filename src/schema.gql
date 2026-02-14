@@ -1,0 +1,37 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Address {
+  city: String!
+  country: String!
+  firstName: String!
+  id: Int!
+  lastName: String!
+  phone: String!
+  state: String!
+  street: String!
+  zipcode: String!
+}
+
+type Order {
+  address: Address!
+  id: String!
+  orderItems: [OrderItem!]!
+  status: String!
+  subTotal: Float!
+  total: Float!
+}
+
+type OrderItem {
+  id: String!
+  name: String!
+  orderId: Int!
+  price: Float!
+  quantity: Int!
+  sku: String!
+}
+
+type Query {
+  order(id: String!): Order
+}
