@@ -3,6 +3,7 @@ import { Consumer } from 'sqs-consumer';
 import { SQSClient, Message } from '@aws-sdk/client-sqs';
 import { OrderService } from '../order.service';
 import { CreateOrderDto } from '../dto/create-order.dto';
+import { UpdateOrderDto } from '../dto/update-order.dto';
 
 @Injectable()
 export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -57,8 +58,13 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
       const body = JSON.parse(message.Body);
       this.logger.log(`Processing Order: Type ${body.type} ${body.order.id} -> ${body.order.status}`);
       
-      const orderData: CreateOrderDto = Object.assign(new CreateOrderDto(), body); 
-      this.orderService.saveOrder(orderData);
+      if (body.type === "create") {
+        const orderData: CreateOrderDto = Object.assign(new CreateOrderDto(), body); 
+        this.orderService.saveOrder(orderData);
+      } else {
+        const orderData: UpdateOrderDto = Object.assign(new UpdateOrderDto(), body); 
+        this.orderService.updateOrderStatus(orderData);
+      }
 
       // TODO: Aqui entra a chamada para o Redis PubSub para atualizar o Frontend
       

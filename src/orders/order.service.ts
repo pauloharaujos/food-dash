@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@/prisma/generated';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 import prisma from '@/prisma/prismaClient';
 
 export type OrderWithDetails = Prisma.OrderGetPayload<{
@@ -54,5 +55,22 @@ export class OrderService {
         });
 
         return newOrder;
+    }
+
+    async updateOrderStatus(payload: UpdateOrderDto): Promise<OrderWithDetails | null> {
+        const order = await prisma.order.update({
+            where: {
+                id: parseInt(payload.order.id)
+            },
+            data: {
+                status: payload.order.status
+            },
+            include: {
+                address: true,
+                orderItems: true
+            }
+        });
+
+        return order;
     }
 }
