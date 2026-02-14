@@ -33,5 +33,6 @@ type OrderItem {
 }
 
 type Query {
+  getOrderHistory: [Order!]
   order(id: String!): Order
 }
