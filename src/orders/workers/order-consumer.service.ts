@@ -4,6 +4,7 @@ import { SQSClient, Message } from '@aws-sdk/client-sqs';
 import { OrderService } from '../order.service';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderDto } from '../dto/update-order.dto';
+import { RedisService } from '../../redis/redis.service';
 
 @Injectable()
 export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -11,7 +12,8 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
   private consumer: Consumer;
 
   constructor(
-    private orderService: OrderService
+    private orderService: OrderService,
+    private redisService: RedisService,
   ) {}
 
   async onModuleInit() {
@@ -58,15 +60,18 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
       const body = JSON.parse(message.Body);
       this.logger.log(`Processing Order: Type ${body.type} ${body.order.id} -> ${body.order.status}`);
       
+      let order;
       if (body.type === "create") {
-        const orderData: CreateOrderDto = Object.assign(new CreateOrderDto(), body); 
-        this.orderService.saveOrder(orderData);
+        const orderData: CreateOrderDto = Object.assign(new CreateOrderDto(), body);
+        order = await this.orderService.saveOrder(orderData);
       } else {
-        const orderData: UpdateOrderDto = Object.assign(new UpdateOrderDto(), body); 
-        this.orderService.updateOrderStatus(orderData);
+        const orderData: UpdateOrderDto = Object.assign(new UpdateOrderDto(), body);
+        order = await this.orderService.updateOrderStatus(orderData);
       }
 
-      // TODO: Publish to Redis PubSub
+      if (order) {
+        await this.redisService.publishOrderUpdate({ type: body.type, order });
+      }
       
     } catch (error) {
       this.logger.error(`Failed to process message: ${error.message}`);
