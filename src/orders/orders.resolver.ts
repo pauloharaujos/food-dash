@@ -1,14 +1,18 @@
-import { Resolver, Args, Query, Parent, ResolveField } from "@nestjs/graphql";
+import { Resolver, Args, Query, Subscription, Parent, ResolveField } from "@nestjs/graphql";
+import { Inject } from '@nestjs/common';
 import { Order } from './models/order.model';
 import { OrderService } from './order.service';
 import { AddressService } from './address.service';
+import { PUB_SUB } from '../redis/redis.module';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 
 @Resolver(() => Order)
 export class OrderResolver {
 
     constructor(
         private orderService: OrderService,
-        private addressService: AddressService
+        private addressService: AddressService,
+        @Inject(PUB_SUB) private pubSub: RedisPubSub,
     ) {}
 
     @Query(() => Order, { nullable: true })
@@ -49,5 +53,12 @@ export class OrderResolver {
     async address(@Parent() order: { id: string }){
         const { id } = order;
         return await this.addressService.getByOrderById(id);
+    }
+
+    @Subscription(() => Order, {
+        name: 'orderUpdates',
+    })
+    orderUpdates() {
+        return this.pubSub.asyncIterator('orderUpdates');
     }
 }
