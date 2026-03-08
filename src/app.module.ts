@@ -15,6 +15,9 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       graphiql: true,
+      subscriptions: {
+        'graphql-ws': true,
+      },
     }),
     OrdersModule
   ],

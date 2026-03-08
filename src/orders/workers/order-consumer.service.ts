@@ -1,10 +1,11 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject, Logger } from '@nestjs/common';
 import { Consumer } from 'sqs-consumer';
 import { SQSClient, Message } from '@aws-sdk/client-sqs';
 import { OrderService } from '../order.service';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderDto } from '../dto/update-order.dto';
-import { RedisService } from '../../redis/redis.service';
+import { PUB_SUB } from '../../redis/redis.module';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 
 @Injectable()
 export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -13,7 +14,7 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private orderService: OrderService,
-    private redisService: RedisService,
+    @Inject(PUB_SUB) private pubSub: RedisPubSub,
   ) {}
 
   async onModuleInit() {
@@ -70,13 +71,33 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
       }
 
       if (order) {
-        await this.redisService.publishOrderUpdate({ type: body.type, order });
+        const formattedOrder = this.formatOrderForGraphQL(order);
+        await this.pubSub.publish('orderUpdates', { orderUpdates: formattedOrder });
+        this.logger.log(`Sending Order Update to Redis: ${formattedOrder.id}`);
       }
       
     } catch (error) {
       this.logger.error(`Failed to process message: ${error.message}`);
       throw error; //This is important, so the message can stay in the queue to be reprocessed
     }
+  }
+
+  private formatOrderForGraphQL(order: {
+    id: number;
+    subtotal: unknown;
+    address: unknown;
+    orderItems: Array<{ id: number }>;
+  }) {
+    return {
+      ...order,
+      id: String(order.id),
+      subTotal: order.subtotal,
+      address: order.address,
+      orderItems: order.orderItems.map((item) => ({
+        ...item,
+        id: String(item.id),
+      })),
+    };
   }
 
   onModuleDestroy() {
