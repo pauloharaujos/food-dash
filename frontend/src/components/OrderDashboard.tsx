@@ -1,5 +1,6 @@
-import { useQuery } from '@apollo/client/react'
-import { GET_ORDER_HISTORY } from '../graphql/orders'
+import { useEffect, useState } from 'react'
+import { useQuery, useSubscription } from '@apollo/client/react'
+import { GET_ORDER_HISTORY, ORDER_UPDATES } from '../graphql/orders'
 
 interface Address {
   firstName: string
@@ -24,7 +25,37 @@ interface GetOrderHistoryData {
 }
 
 export function OrderDashboard() {
-  const { data, loading, error } = useQuery<GetOrderHistoryData>(GET_ORDER_HISTORY)
+  const { data, loading, error } =
+    useQuery<GetOrderHistoryData>(GET_ORDER_HISTORY)
+  const { data: subscriptionData } = useSubscription<{
+    orderUpdates: Order | null
+  }>(ORDER_UPDATES)
+
+  const [orders, setOrders] = useState<Order[]>([])
+
+  useEffect(() => {
+    if (data?.getOrderHistory) {
+      setOrders(data.getOrderHistory)
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (!subscriptionData?.orderUpdates) return
+
+    const updatedOrder = subscriptionData.orderUpdates
+
+    setOrders((prev) => {
+      const index = prev.findIndex((order) => order.id === updatedOrder.id)
+
+      if (index === -1) {
+        return [updatedOrder, ...prev]
+      }
+
+      const next = [...prev]
+      next[index] = { ...next[index], ...updatedOrder }
+      return next
+    })
+  }, [subscriptionData])
 
   if (loading) {
     return (
@@ -42,8 +73,6 @@ export function OrderDashboard() {
       </div>
     )
   }
-
-  const orders = data?.getOrderHistory ?? []
 
   if (orders.length === 0) {
     return (

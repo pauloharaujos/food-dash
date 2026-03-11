@@ -7,10 +7,26 @@ export const GET_ORDER_HISTORY = gql`
       total
       status
       address {
-      city
-      country
-      street
-      zipcode 
+        city
+        country
+        street
+        zipcode
+      }
+    }
+  }
+`
+
+export const ORDER_UPDATES = gql`
+  subscription OrderUpdates {
+    orderUpdates {
+      id
+      total
+      status
+      address {
+        city
+        country
+        street
+        zipcode
       }
     }
   }
