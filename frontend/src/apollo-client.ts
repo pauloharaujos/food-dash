@@ -9,9 +9,9 @@ import { getMainDefinition } from '@apollo/client/utilities'
 import { createClient } from 'graphql-ws'
 
 const httpUrl =
-  import.meta.env.VITE_GRAPHQL_HTTP_URL ?? 'http://localhost:3000/graphql'
+  import.meta.env.VITE_GRAPHQL_HTTP_URL ?? 'http://localhost:4000/graphql'
 const wsUrl =
-  import.meta.env.VITE_GRAPHQL_WS_URL ?? 'ws://localhost:3000/graphql'
+  import.meta.env.VITE_GRAPHQL_WS_URL ?? 'ws://localhost:4000/graphql'
 
 const httpLink = new HttpLink({
   uri: httpUrl,
