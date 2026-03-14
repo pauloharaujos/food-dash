@@ -1,0 +1,35 @@
+name: 'FoodDash Infrastructure & Deployment'
+
+on:
+  push:
+    branches: [ "feature/implement-terraform-for-aws-infrastructure" ]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    outputs:
+      server_ip: ${{ steps.apply.outputs.server_ip }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      - id: apply
+        run: terraform apply -auto-approve
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build NestJS
+        run: |
+          npm install
+          npm run build
+      - name: Deploy to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ needs.terraform.outputs.server_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist,package.json"
+          target: "/home/ubuntu/fooddash"
