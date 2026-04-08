@@ -68,6 +68,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.tfstate
 *.tfstate.*
 
+# Terraform plan files (may contain sensitive data)
+*.tfplan
+
 # Crash logs
 crash.log
 
