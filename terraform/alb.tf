@@ -1,5 +1,5 @@
 # terraform/alb.tf
-# Application Load Balancer, target group, and HTTP listener
+# Application Load Balancer, target group, and HTTP listener test
 
 resource "aws_lb" "main" {
   name               = "${var.project_name}-alb"
