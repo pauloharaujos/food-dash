@@ -88,9 +88,11 @@ jobs:
           cache: 'npm'
 
       - name: Build NestJS bundle
+        env:
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
         run: |
           npm ci --ignore-scripts
-          npx prisma migrate deploy && npx prisma generate
+          npx prisma generate
           npm run build
 
       - name: Assemble CodeDeploy revision
