@@ -98,7 +98,4 @@ resource "aws_iam_role_policy_attachment" "codedeploy_ec2" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
 }
 
-resource "aws_iam_role_policy_attachment" "codedeploy_elbv2" {
-  role       = aws_iam_role.codedeploy.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForElasticLoadBalancingV2"
-}
+
