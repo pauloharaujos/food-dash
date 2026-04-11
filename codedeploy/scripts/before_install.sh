@@ -1,5 +1,14 @@
 #!/bin/bash
 set -e
+
+# Ensure swap exists to prevent OOM kills during npm ci on low-memory instances
+if [ ! -f /swapfile ]; then
+  fallocate -l 1G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+fi
+
 mkdir -p /opt/fooddash
 if [ -f /opt/fooddash/.env ]; then
   cp /opt/fooddash/.env /tmp/fooddash.env.preserve
