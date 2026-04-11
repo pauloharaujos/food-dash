@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+export PATH=$PATH:/usr/local/bin:/usr/bin
 cd /opt/fooddash
 
 # Pull all secrets stored under /fooddash/* in SSM Parameter Store.

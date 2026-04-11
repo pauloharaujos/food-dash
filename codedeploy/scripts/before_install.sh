@@ -8,3 +8,5 @@ rm -rf /opt/fooddash/*
 if [ -f /tmp/fooddash.env.preserve ]; then
   mv /tmp/fooddash.env.preserve /opt/fooddash/.env
 fi
+chown ubuntu:ubuntu /opt/fooddash
+[ -f /opt/fooddash/.env ] && chown ubuntu:ubuntu /opt/fooddash/.env || true
