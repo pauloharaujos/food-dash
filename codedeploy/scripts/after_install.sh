@@ -18,5 +18,6 @@ aws ssm get-parameters-by-path \
   done > .env
 
 npm ci --omit=dev --ignore-scripts
+rm -rf prisma/generated
 npx prisma generate
 npx prisma migrate deploy
