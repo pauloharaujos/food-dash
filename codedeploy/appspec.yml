@@ -3,6 +3,13 @@ os: linux
 files:
   - source: /
     destination: /opt/fooddash
+permissions:
+  - object: /opt/fooddash
+    owner: ubuntu
+    group: ubuntu
+    type:
+      - file
+      - directory
 hooks:
   ApplicationStop:
     - location: scripts/application_stop.sh
