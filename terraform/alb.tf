@@ -15,10 +15,11 @@ resource "aws_lb" "main" {
 }
 
 resource "aws_lb_target_group" "backend" {
-  name     = "${var.project_name}-backend-tg"
-  port     = var.app_port
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.fooddash_vpc.id
+  name                 = "${var.project_name}-backend-tg"
+  port                 = var.app_port
+  protocol             = "HTTP"
+  vpc_id               = aws_vpc.fooddash_vpc.id
+  deregistration_delay = 30
 
   health_check {
     enabled             = true
