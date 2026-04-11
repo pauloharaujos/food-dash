@@ -18,6 +18,11 @@ aws ssm get-parameters-by-path \
     printf '%s=%s\n' "$key" "$value"
   done > .env
 
+#Export env vars for npm scripts
+set -a
+source .env
+set +a
+
 npm ci --omit=dev --ignore-scripts
 rm -rf prisma/generated
 npx prisma generate
