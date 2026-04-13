@@ -4,9 +4,6 @@ export PATH=$PATH:/usr/local/bin:/usr/bin
 
 cd /opt/fooddash
 
-# Pull all secrets stored under /fooddash/* in SSM Parameter Store.
-# Each parameter name becomes the env var key: /fooddash/DATABASE_URL → DATABASE_URL=...
-# Add secrets via: aws ssm put-parameter --name /fooddash/DATABASE_URL --value '...' --type SecureString
 REGION=$(curl -sf http://169.254.169.254/latest/meta-data/placement/region || echo "us-east-1")
 aws ssm get-parameters-by-path \
   --path "/fooddash/" \
