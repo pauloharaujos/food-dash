@@ -18,12 +18,14 @@ aws ssm get-parameters-by-path \
     printf '%s=%s\n' "$key" "$value"
   done > .env
 
-#Export env vars for npm scripts
-set -a
-source .env
-set +a
-
 npm ci --omit=dev --ignore-scripts
 rm -rf prisma/generated
 npx prisma generate
+
+# Explicitly export DATABASE_URL for prisma migrate deploy
+export DATABASE_URL=$(grep '^DATABASE_URL=' .env | cut -d= -f2-)
+if [ -z "$DATABASE_URL" ]; then
+  echo "ERROR: DATABASE_URL not found in .env — check SSM parameter /fooddash/DATABASE_URL" >&2
+  exit 1
+fi
 npx prisma migrate deploy
