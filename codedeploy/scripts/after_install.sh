@@ -1,6 +1,7 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 export PATH=$PATH:/usr/local/bin:/usr/bin
+
 cd /opt/fooddash
 
 # Pull all secrets stored under /fooddash/* in SSM Parameter Store.
@@ -17,6 +18,11 @@ aws ssm get-parameters-by-path \
     key="${name##*/}"
     printf '%s=%s\n' "$key" "$value"
   done > .env
+
+if [ ! -s .env ]; then
+  echo "ERROR: .env is empty — SSM fetch failed or /fooddash/ has no parameters" >&2
+  exit 1
+fi
 
 npm ci --omit=dev --ignore-scripts
 rm -rf prisma/generated
