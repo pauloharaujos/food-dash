@@ -103,8 +103,8 @@ jobs:
       - name: Build
         working-directory: frontend
         env:
-          VITE_GRAPHQL_HTTP_URL: ${{ vars.VITE_GRAPHQL_HTTP_URL }}
-          VITE_GRAPHQL_WS_URL: ${{ vars.VITE_GRAPHQL_WS_URL }}
+          VITE_GRAPHQL_HTTP_URL: ${{ vars.FRONTEND_VITE_GRAPHQL_HTTP_URL }}
+          VITE_GRAPHQL_WS_URL: ${{ vars.FRONTEND_VITE_GRAPHQL_WS_URL }}
         run: npm run build
 
       - name: Sync to S3
@@ -121,7 +121,7 @@ jobs:
 
       - name: Invalidate CloudFront cache
         env:
-          DIST_ID: ${{ needs.terraform-frontend.outputs.cloudfront_distribution_id || vars.CLOUDFRONT_DIST_ID }}
+          DIST_ID: ${{ needs.terraform-frontend.outputs.cloudfront_distribution_id || vars.FRONTEND_CLOUDFRONT_DIST_ID }}
         run: |
           aws cloudfront create-invalidation \
             --distribution-id "$DIST_ID" \
@@ -129,4 +129,4 @@ jobs:
 
       - name: Frontend URL
         run: |
-          echo "Frontend available at ${{ needs.terraform-frontend.outputs.cloudfront_url || vars.CLOUDFRONT_URL }}"
+          echo "Frontend available at ${{ needs.terraform-frontend.outputs.cloudfront_url || vars.FRONTEND_CLOUDFRONT_URL }}"

@@ -112,7 +112,7 @@ jobs:
 
       - name: Upload revision to S3
         env:
-          BUCKET: ${{ needs.terraform.outputs.codedeploy_artifacts_bucket || vars.CODEDEPLOY_BUCKET }}
+          BUCKET: ${{ needs.terraform.outputs.codedeploy_artifacts_bucket || vars.BACKEND_CODEDEPLOY_BUCKET }}
         run: |
           KEY="deployments/${{ github.sha }}.zip"
           aws s3 cp bundle.zip "s3://${BUCKET}/${KEY}"
@@ -121,8 +121,8 @@ jobs:
 
       - name: Create CodeDeploy deployment
         env:
-          APP: ${{ needs.terraform.outputs.codedeploy_application_name || vars.CODEDEPLOY_APP }}
-          DG: ${{ needs.terraform.outputs.codedeploy_deployment_group_name || vars.CODEDEPLOY_DG }}
+          APP: ${{ needs.terraform.outputs.codedeploy_application_name || vars.BACKEND_CODEDEPLOY_APP }}
+          DG: ${{ needs.terraform.outputs.codedeploy_deployment_group_name || vars.BACKEND_CODEDEPLOY_DG }}
         run: |
           DEPLOY_ID=$(aws deploy create-deployment \
             --application-name "$APP" \
@@ -135,4 +135,4 @@ jobs:
           aws deploy wait deployment-successful --deployment-id "$DEPLOY_ID"
 
       - name: App URL
-        run: echo "App available at ${{ needs.terraform.outputs.app_url || vars.APP_URL }}"
+        run: echo "App available at ${{ needs.terraform.outputs.app_url || vars.BACKEND_APP_URL }}"

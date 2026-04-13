@@ -118,20 +118,20 @@ After the first deploy, copy these values from the Terraform job output and add 
 
 | Variable | Source |
 |---|---|
-| `CODEDEPLOY_BUCKET` | `terraform/backend` output `codedeploy_artifacts_bucket` |
-| `CODEDEPLOY_APP` | `terraform/backend` output `codedeploy_application_name` |
-| `CODEDEPLOY_DG` | `terraform/backend` output `codedeploy_deployment_group_name` |
-| `APP_URL` | `terraform/backend` output `app_url` |
+| `BACKEND_CODEDEPLOY_BUCKET` | `terraform/backend` output `codedeploy_artifacts_bucket` |
+| `BACKEND_CODEDEPLOY_APP` | `terraform/backend` output `codedeploy_application_name` |
+| `BACKEND_CODEDEPLOY_DG` | `terraform/backend` output `codedeploy_deployment_group_name` |
+| `BACKEND_APP_URL` | `terraform/backend` output `app_url` |
 
 **Frontend**
 
 | Variable | Source |
 |---|---|
 | `FRONTEND_BUCKET` | `terraform/frontend` output `frontend_bucket_name` |
-| `CLOUDFRONT_DIST_ID` | `terraform/frontend` output `cloudfront_distribution_id` |
-| `CLOUDFRONT_URL` | `terraform/frontend` output `cloudfront_url` |
-| `VITE_GRAPHQL_HTTP_URL` | Your ALB URL + `/graphql` |
-| `VITE_GRAPHQL_WS_URL` | Your ALB URL + `/graphql` (ws://) |
+| `FRONTEND_CLOUDFRONT_DIST_ID` | `terraform/frontend` output `cloudfront_distribution_id` |
+| `FRONTEND_CLOUDFRONT_URL` | `terraform/frontend` output `cloudfront_url` |
+| `FRONTEND_VITE_GRAPHQL_HTTP_URL` | Your ALB URL + `/graphql` |
+| `FRONTEND_VITE_GRAPHQL_WS_URL` | Your ALB URL + `/graphql` (ws://) |
 
 ---
 
