@@ -22,7 +22,6 @@ if [ ! -s .env ]; then
 fi
 
 npm ci --omit=dev --ignore-scripts
-rm -rf prisma/generated
 npx prisma generate
 
 # Explicitly export DATABASE_URL for prisma migrate deploy
