@@ -1,6 +1,3 @@
-# terraform/alb.tf
-# Application Load Balancer, target group, and HTTP listener test
-
 resource "aws_lb" "main" {
   name               = "${var.project_name}-alb"
   internal           = false
@@ -8,7 +5,7 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = [for s in aws_subnet.public_subnet : s.id]
 
-  enable_deletion_protection = false # Set true for production
+  enable_deletion_protection = false
   enable_http2               = true
 
   tags = merge(local.common_tags, { Name = "${var.project_name}-alb" })

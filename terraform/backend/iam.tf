@@ -1,12 +1,3 @@
-# terraform/iam.tf
-# All IAM roles, policies, and instance profiles
-
-# -----------------------------------------------------------------------------
-# EC2 instance role
-# Grants instances permission to: pull CodeDeploy bundles from S3,
-# read app secrets from SSM, and use SSM Session Manager (no port 22 needed).
-# -----------------------------------------------------------------------------
-
 resource "aws_iam_role" "backend_ec2" {
   name_prefix = "${var.project_name}-ec2-"
 
@@ -59,7 +50,6 @@ resource "aws_iam_role_policy" "backend_ec2_ssm" {
   })
 }
 
-# Enables SSM Session Manager — shell access to instances without opening port 22
 resource "aws_iam_role_policy_attachment" "backend_ec2_ssm_core" {
   role       = aws_iam_role.backend_ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -71,12 +61,6 @@ resource "aws_iam_instance_profile" "backend_ec2" {
 
   tags = merge(local.common_tags, { Name = "${var.project_name}-ec2-profile" })
 }
-
-# -----------------------------------------------------------------------------
-# CodeDeploy service role
-# Allows CodeDeploy to manage EC2 instances in the ASG and deregister/register
-# them from the ALB target group during in-place deployments.
-# -----------------------------------------------------------------------------
 
 resource "aws_iam_role" "codedeploy" {
   name_prefix = "${var.project_name}-codedeploy-"

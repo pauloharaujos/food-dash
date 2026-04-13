@@ -1,8 +1,13 @@
-name: 'FoodDash Infrastructure & Deployment'
+name: 'FoodDash Backend — Infrastructure & Deploy'
 
 on:
   push:
     branches: [ "feature/implement-terraform-for-aws-infrastructure" ]
+    paths:
+      - 'src/**'
+      - 'prisma/**'
+      - 'terraform/backend/codedeploy/**'
+      - 'terraform/backend/**'
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
@@ -24,7 +29,7 @@ jobs:
         with:
           filters: |
             terraform:
-              - 'terraform/**'
+              - 'terraform/backend/**'
 
   terraform:
     runs-on: ubuntu-latest
@@ -32,7 +37,7 @@ jobs:
     if: needs.detect-terraform-changes.outputs.terraform == 'true'
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform/backend
     outputs:
       app_url: ${{ steps.output.outputs.app_url }}
       codedeploy_artifacts_bucket: ${{ steps.output.outputs.codedeploy_artifacts_bucket }}
@@ -99,9 +104,9 @@ jobs:
         run: |
           STAGE=$(mktemp -d)
           cp -r dist package.json package-lock.json prisma "$STAGE/"
-          cp codedeploy/appspec.yml "$STAGE/"
+          cp terraform/backend/codedeploy/appspec.yml "$STAGE/"
           mkdir -p "$STAGE/scripts"
-          cp codedeploy/scripts/*.sh "$STAGE/scripts/"
+          cp terraform/backend/codedeploy/scripts/*.sh "$STAGE/scripts/"
           chmod +x "$STAGE/scripts/"*.sh
           (cd "$STAGE" && zip -r "$GITHUB_WORKSPACE/bundle.zip" .)
 

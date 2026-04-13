@@ -1,7 +1,6 @@
-# FoodDash Infrastructure — Setup & Deployment Instructions
+# FoodDash Infrastructure — Setup & Deployment Guide
 
-Complete guide for provisioning the AWS infrastructure and getting the CI/CD pipeline running.
-Follow the steps in order the first time. After setup, only Steps 4–5 apply for routine use.
+Infrastructure is split into two independent Terraform modules — `terraform/backend/` and `terraform/frontend/` — each with its own remote state and CI/CD workflow.
 
 ---
 
@@ -14,11 +13,9 @@ Follow the steps in order the first time. After setup, only Steps 4–5 apply fo
 
 ---
 
-## Step 1 — Run the bootstrap (one-time, your laptop)
+## Step 1 — Run the bootstrap (one-time)
 
-The bootstrap creates the S3 bucket for Terraform state and the IAM role that
-GitHub Actions will use. This is the only step that requires AWS credentials on
-your machine. After this, everything runs in CI automatically.
+The bootstrap creates the S3 bucket for Terraform state and the IAM role GitHub Actions uses. This is the only step that requires local AWS credentials.
 
 ```bash
 cd terraform/bootstrap
@@ -46,8 +43,6 @@ aws_account_id          = "123456789"
 
 Go to your repository → **Settings → Variables → Actions → New repository variable**
 
-Add these three variables (not Secrets — these are not sensitive):
-
 | Variable | Value |
 |---|---|
 | `GHA_ROLE_ARN` | from bootstrap output `github_actions_role_arn` |
@@ -58,10 +53,7 @@ Add these three variables (not Secrets — these are not sensitive):
 
 ## Step 3 — Add app secrets to AWS SSM
 
-Secrets never go in GitHub. They live in AWS SSM Parameter Store and are
-fetched automatically by each EC2 instance at deploy time.
-
-Run these commands with your AWS admin credentials:
+Secrets live in AWS SSM Parameter Store and are fetched by each EC2 instance at deploy time.
 
 ```bash
 # Database connection string
@@ -89,15 +81,14 @@ aws ssm put-parameter \
   --type SecureString
 ```
 
-The naming convention `/fooddash/<KEY>` is important.
-The deploy script strips the prefix and writes `KEY=value` into the `.env` file on the instance.
+The naming convention `/fooddash/<KEY>` strips the prefix and writes `KEY=value` into `.env` on each instance.
 
-To update a secret later:
+To update a secret:
 ```bash
 aws ssm put-parameter --name /fooddash/DATABASE_URL --value "new-value" --type SecureString --overwrite
 ```
 
-To list all current secrets:
+To list all secrets:
 ```bash
 aws ssm get-parameters-by-path --path /fooddash/ --with-decryption --query "Parameters[*].[Name,Value]" --output table
 ```
@@ -106,102 +97,121 @@ aws ssm get-parameters-by-path --path /fooddash/ --with-decryption --query "Para
 
 ## Step 4 — Trigger the first deploy
 
-Push any change to the `main` branch (or the configured `deploy_branch`).
+Push to the configured branch. The `deploy-backend.yml` workflow will:
+1. Authenticate to AWS via OIDC
+2. Run `terraform apply` inside `terraform/backend/` (provisions VPC, ALB, ASG, CodeDeploy)
+3. Build the NestJS app, upload the bundle to S3, and trigger a CodeDeploy deployment
 
-The GitHub Actions workflow will:
-1. Authenticate to AWS via OIDC (no stored credentials)
-2. Run `terraform init` → `terraform plan` → `terraform apply` (provisions all infra)
-3. Build the NestJS app
-4. Upload the bundle to S3
-5. Trigger a CodeDeploy deployment to the EC2 instances
-6. Print the app URL
+The `deploy-frontend.yml` workflow will:
+1. Run `terraform apply` inside `terraform/frontend/` (provisions S3 bucket + CloudFront)
+2. Build the Vite app, sync assets to S3, and invalidate the CloudFront cache
 
 Monitor progress at: `https://github.com/YOUR_ORG/food-dash/actions`
 
 ---
 
-## Step 5 — Add remaining GitHub Variables (after first deploy)
+## Step 5 — Add fallback GitHub Variables (after first deploy)
 
-After the first successful deploy, copy these values from the Terraform job
-output in the GitHub Actions log and add them as GitHub Variables.
+After the first deploy, copy these values from the Terraform job output and add them as GitHub Variables. They're used as fallbacks when only app code changes (skipping Terraform).
 
-These are fallbacks used by the deploy job when only app code changes
-(skipping Terraform to save time):
+**Backend**
 
-| Variable | Where to find it |
+| Variable | Source |
 |---|---|
-| `CODEDEPLOY_BUCKET` | Terraform output `codedeploy_artifacts_bucket` |
-| `CODEDEPLOY_APP` | Terraform output `codedeploy_application_name` |
-| `CODEDEPLOY_DG` | Terraform output `codedeploy_deployment_group_name` |
-| `APP_URL` | Terraform output `app_url` |
+| `CODEDEPLOY_BUCKET` | `terraform/backend` output `codedeploy_artifacts_bucket` |
+| `CODEDEPLOY_APP` | `terraform/backend` output `codedeploy_application_name` |
+| `CODEDEPLOY_DG` | `terraform/backend` output `codedeploy_deployment_group_name` |
+| `APP_URL` | `terraform/backend` output `app_url` |
+
+**Frontend**
+
+| Variable | Source |
+|---|---|
+| `FRONTEND_BUCKET` | `terraform/frontend` output `frontend_bucket_name` |
+| `CLOUDFRONT_DIST_ID` | `terraform/frontend` output `cloudfront_distribution_id` |
+| `CLOUDFRONT_URL` | `terraform/frontend` output `cloudfront_url` |
+| `VITE_GRAPHQL_HTTP_URL` | Your ALB URL + `/graphql` |
+| `VITE_GRAPHQL_WS_URL` | Your ALB URL + `/graphql` (ws://) |
 
 ---
 
 ## Routine use
 
-### Deploy app changes
-Just push to `main`. Terraform is skipped (no `.tf` files changed).
-Only the build → upload → CodeDeploy steps run (~3–5 min).
+### Deploy backend changes
+Push changes under `src/`, `prisma/`, or `codedeploy/`. Terraform is skipped; only the build → CodeDeploy steps run (~3–5 min).
 
-### Deploy infra changes
-Edit any `.tf` file and push to `main`. Terraform will plan and apply,
-then the app deploy runs after.
+### Deploy frontend changes
+Push changes under `frontend/`. Only the build → S3 sync → CloudFront invalidation steps run (~2 min).
+
+### Deploy infrastructure changes
+Edit files under `terraform/backend/` or `terraform/frontend/` and push. Terraform will plan and apply, then the corresponding deploy step runs.
 
 ### View current Terraform state
+
 ```bash
-cd terraform
+# Backend
+cd terraform/backend
 terraform init \
   -backend-config="bucket=YOUR_TF_STATE_BUCKET" \
   -backend-config="key=fooddash/terraform.tfstate" \
   -backend-config="region=us-east-1" \
   -backend-config="encrypt=true"
+terraform show
 
+# Frontend
+cd terraform/frontend
+terraform init \
+  -backend-config="bucket=YOUR_TF_STATE_BUCKET" \
+  -backend-config="key=fooddash/frontend.tfstate" \
+  -backend-config="region=us-east-1" \
+  -backend-config="encrypt=true"
 terraform show
 ```
 
-### Destroy all infrastructure (e.g. end of week to save cost)
+### Destroy infrastructure
 ```bash
-cd terraform
-terraform destroy
+cd terraform/backend && terraform destroy
+cd terraform/frontend && terraform destroy
 ```
-
-> **Warning:** This deletes the ALB, ASG, EC2 instances, and S3 bucket.
-> The SSM secrets and Terraform state bucket are unaffected.
-> Re-running the deploy workflow will rebuild everything from scratch.
 
 ---
 
-## Architecture reference
+## Architecture
 
 ```
-Internet
-    │
-    ▼
-Application Load Balancer (port 80)
-    │
-    ├── us-east-1a: EC2 t3.micro
-    └── us-east-1b: EC2 t3.micro
-              │
-              └── NestJS app (PM2, port 3000)
-                  └── .env fetched from SSM at deploy time
+Users
+ ├── CloudFront (d1abc.cloudfront.net) → S3 bucket   [Frontend — React/Vite]
+ └── ALB (fooddash-alb-xxx.us-east-1.elb.amazonaws.com)
+      ├── us-east-1a: EC2 t3.micro
+      └── us-east-1b: EC2 t3.micro
+               └── NestJS (PM2, port 3000)
+                   └── .env ← SSM at deploy time
 
 GitHub Actions (OIDC → IAM role)
-    → terraform apply (infra)
-    → CodeDeploy (app bundle from S3)
+ ├── deploy-backend.yml → terraform/backend + CodeDeploy
+ └── deploy-frontend.yml → terraform/frontend + S3 sync
 ```
 
-## File structure
+## Terraform structure
 
 ```
 terraform/
-  main.tf          — terraform block, provider, locals
-  variables.tf     — all input variables
-  outputs.tf       — all outputs
-  network.tf       — VPC, subnets, IGW, routing
-  security.tf      — security groups
-  alb.tf           — Application Load Balancer
-  autoscaling.tf   — launch template and ASG
-  iam.tf           — IAM roles and policies
-  codedeploy.tf    — S3 artifact bucket and CodeDeploy
-  bootstrap/       — one-time setup (run locally once)
+  backend/
+    main.tf          — provider, locals
+    variables.tf
+    outputs.tf
+    network.tf       — VPC, subnets, IGW
+    security.tf      — security groups
+    alb.tf           — ALB, target group, listener
+    autoscaling.tf   — launch template, ASG
+    iam.tf           — EC2 + CodeDeploy IAM roles
+    codedeploy.tf    — S3 artifact bucket, CodeDeploy app/dg
+    scripts/         — EC2 user data
+  frontend/
+    main.tf          — provider, locals
+    variables.tf
+    outputs.tf
+    s3.tf            — private S3 bucket
+    cdn.tf           — CloudFront distribution + OAC
+  bootstrap/         — one-time setup (run locally once)
 ```

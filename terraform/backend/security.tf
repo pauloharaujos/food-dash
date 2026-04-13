@@ -1,7 +1,3 @@
-# terraform/security.tf
-# Security groups for the ALB and backend EC2 instances
-
-# ALB: allows HTTP/HTTPS from internet, forwards to instances
 resource "aws_security_group" "alb_sg" {
   name        = "${var.project_name}-alb-sg"
   description = "Security group for Application Load Balancer"
@@ -34,7 +30,6 @@ resource "aws_security_group" "alb_sg" {
   tags = merge(local.common_tags, { Name = "${var.project_name}-alb-sg" })
 }
 
-# Instances: allow traffic only from ALB on app port + SSH for administration
 resource "aws_security_group" "backend_sg" {
   name        = "${var.project_name}-backend-sg"
   description = "Security group for backend EC2 instances"

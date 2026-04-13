@@ -1,7 +1,3 @@
-# terraform/autoscaling.tf
-# Launch template and Auto Scaling Group for backend EC2 instances
-
-# Latest Ubuntu 22.04 LTS AMI (Canonical)
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical
