@@ -23,9 +23,14 @@ rm -rf prisma/generated
 npx prisma generate
 
 # Explicitly export DATABASE_URL for prisma migrate deploy
-export DATABASE_URL=$(grep '^DATABASE_URL=' .env | cut -d= -f2-)
+export DATABASE_URL=$(aws ssm get-parameter \
+  --name /fooddash/DATABASE_URL \
+  --with-decryption \
+  --query Parameter.Value \
+  --output text \
+  --region "$REGION")
 if [ -z "$DATABASE_URL" ]; then
-  echo "ERROR: DATABASE_URL not found in .env — check SSM parameter /fooddash/DATABASE_URL" >&2
+  echo "ERROR: DATABASE_URL not found in SSM at /fooddash/DATABASE_URL" >&2
   exit 1
 fi
 npx prisma migrate deploy
