@@ -22,21 +22,21 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private initializeConsumer() {
+    const queueUrl = process.env.AWS_SQS_QUEUE_URL;
+    const endpoint = process.env.AWS_ENDPOINT_URL;
+
     this.consumer = Consumer.create({
-      queueUrl: 'http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/food-dash-order-updates',
-      
+      queueUrl,
       handleMessage: async (message) => {
         await this.processOrderUpdate(message);
         return message;
       },
-      
       sqs: new SQSClient({
-        endpoint: 'http://localhost:4566',
-        region: 'us-east-1',
-        credentials: {
-          accessKeyId: 'test',
-          secretAccessKey: 'test',
-        },
+        ...(endpoint ? { endpoint } : {}),
+        region: process.env.AWS_REGION ?? 'us-east-1',
+        ...(endpoint
+          ? { credentials: { accessKeyId: 'test', secretAccessKey: 'test' } }
+          : {}),
       }),
     });
 

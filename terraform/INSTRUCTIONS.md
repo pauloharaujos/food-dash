@@ -74,13 +74,6 @@ aws ssm put-parameter \
   --value "production" \
   --type SecureString
 
-# Node environment
-aws ssm put-parameter \
-  --name /fooddash/NODE_ENV \
-  --value "production" \
-  --type SecureString
-```
-
 > The SQS queue URL and Redis endpoint are **not known until after `terraform apply` runs** (Step 4). Add them afterwards — see Step 5b below.
 
 
@@ -176,6 +169,17 @@ aws ssm put-parameter --name /fooddash/REDIS_HOST --value "new-value" --type Sec
 ```
 
 > No new GitHub Variables are required — the EC2 instances already fetch all `/fooddash/*` parameters from SSM at deploy time via the existing IAM policy.
+
+### Step 5b — Redeploy after storing SSM parameters
+
+The first deployment (Step 4) ran before these SSM parameters existed, so the running instances have a `.env` missing `AWS_SQS_QUEUE_URL`, `REDIS_HOST`, and `REDIS_PORT`. Trigger a new deployment to pick them up:
+
+Once the CodeDeploy deployment completes, `after_install.sh` will re-fetch all `/fooddash/*` parameters from SSM and write the complete `.env` to each instance.
+
+To trigger the redeploy via the GitHub Actions UI:
+1. Go to your repository → **Actions**
+2. Select the **Deploy Backend** workflow
+3. Click **Run workflow**, choose the target branch, and confirm
 
 ---
 
