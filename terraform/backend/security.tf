@@ -64,7 +64,7 @@ resource "aws_security_group" "backend_sg" {
 
 resource "aws_security_group" "redis_sg" {
   name        = "${var.project_name}-redis-sg"
-  description = "Security group for ElastiCache Redis — only reachable from backend EC2 instances"
+  description = "Security group for ElastiCache Redis - only reachable from backend EC2 instances"
   vpc_id      = aws_vpc.fooddash_vpc.id
 
   ingress {
