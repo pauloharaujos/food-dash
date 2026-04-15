@@ -59,3 +59,9 @@ variable "health_check_path" {
   type        = string
   default     = "/health"
 }
+
+variable "redis_node_type" {
+  description = "ElastiCache node type for Redis"
+  type        = string
+  default     = "cache.t3.micro"
+}

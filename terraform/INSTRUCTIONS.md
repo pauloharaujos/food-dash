@@ -74,12 +74,16 @@ aws ssm put-parameter \
   --value "production" \
   --type SecureString
 
-# SQS queue URL (if used)
+# Node environment
 aws ssm put-parameter \
-  --name /fooddash/AWS_SQS_QUEUE_URL \
-  --value "https://sqs.us-east-1.amazonaws.com/..." \
+  --name /fooddash/NODE_ENV \
+  --value "production" \
   --type SecureString
 ```
+
+> The SQS queue URL and Redis endpoint are **not known until after `terraform apply` runs** (Step 4). Add them afterwards — see Step 5b below.
+
+
 
 The naming convention `/fooddash/<KEY>` strips the prefix and writes `KEY=value` into `.env` on each instance.
 
@@ -132,6 +136,46 @@ After the first deploy, copy these values from the Terraform job output and add 
 | `FRONTEND_CLOUDFRONT_URL` | `terraform/frontend` output `cloudfront_url` |
 | `FRONTEND_VITE_GRAPHQL_HTTP_URL` | Your ALB URL + `/graphql` |
 | `FRONTEND_VITE_GRAPHQL_WS_URL` | Your ALB URL + `/graphql` (ws://) |
+
+---
+
+## Step 5b — Add SQS and Redis SSM parameters (after first deploy)
+
+After `terraform apply` completes, the SQS queue URL and Redis endpoint are available as Terraform outputs. Run the following to store them in SSM so the app can read them at runtime:
+
+```bash
+# Get the values from Terraform output
+cd terraform/backend
+SQS_URL=$(terraform output -raw sqs_orders_queue_url)
+REDIS_HOST=$(terraform output -raw redis_endpoint)
+REDIS_PORT=$(terraform output -raw redis_port)
+
+# Store in SSM Parameter Store
+aws ssm put-parameter \
+  --name /fooddash/AWS_SQS_QUEUE_URL \
+  --value "$SQS_URL" \
+  --type SecureString \
+  --region us-east-1
+
+aws ssm put-parameter \
+  --name /fooddash/REDIS_HOST \
+  --value "$REDIS_HOST" \
+  --type SecureString \
+  --region us-east-1
+
+aws ssm put-parameter \
+  --name /fooddash/REDIS_PORT \
+  --value "$REDIS_PORT" \
+  --type SecureString \
+  --region us-east-1
+```
+
+To update any of them later:
+```bash
+aws ssm put-parameter --name /fooddash/REDIS_HOST --value "new-value" --type SecureString --overwrite
+```
+
+> No new GitHub Variables are required — the EC2 instances already fetch all `/fooddash/*` parameters from SSM at deploy time via the existing IAM policy.
 
 ---
 

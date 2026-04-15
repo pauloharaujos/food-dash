@@ -50,6 +50,30 @@ resource "aws_iam_role_policy" "backend_ec2_ssm" {
   })
 }
 
+resource "aws_iam_role_policy" "backend_ec2_sqs" {
+  name_prefix = "sqs-orders-"
+  role        = aws_iam_role.backend_ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "OrdersQueueAccess"
+      Effect = "Allow"
+      Action = [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+      ]
+      Resource = [
+        aws_sqs_queue.orders.arn,
+        aws_sqs_queue.orders_dlq.arn,
+      ]
+    }]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "backend_ec2_ssm_core" {
   role       = aws_iam_role.backend_ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"

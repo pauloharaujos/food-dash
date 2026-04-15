@@ -30,3 +30,23 @@ output "codedeploy_deployment_group_name" {
   description = "CodeDeploy deployment group name"
   value       = aws_codedeploy_deployment_group.backend.deployment_group_name
 }
+
+output "sqs_orders_queue_url" {
+  description = "URL of the SQS orders queue"
+  value       = aws_sqs_queue.orders.url
+}
+
+output "sqs_orders_queue_arn" {
+  description = "ARN of the SQS orders queue"
+  value       = aws_sqs_queue.orders.arn
+}
+
+output "redis_endpoint" {
+  description = "ElastiCache Redis primary endpoint"
+  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
+}
+
+output "redis_port" {
+  description = "ElastiCache Redis port"
+  value       = aws_elasticache_cluster.redis.port
+}
