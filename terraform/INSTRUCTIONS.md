@@ -183,6 +183,21 @@ To trigger the redeploy via the GitHub Actions UI:
 
 ---
 
+## Testing the frontend
+
+> **⚠️ Warning — Mixed content during testing**
+>
+> The frontend is served over HTTPS (CloudFront) but the backend ALB does not have an SSL certificate, so its GraphQL endpoint is HTTP only. Browsers block HTTPS pages from making HTTP requests (mixed content policy), which causes "Failed to fetch" errors in the Order Dashboard.
+>
+> This is a **local testing workaround only** and does not affect production (which should have a custom domain + SSL on the ALB).
+>
+> To allow it in Chrome for your session:
+> 1. Go to `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+> 2. Add your CloudFront URL (e.g. `https://d39too7dg51py8.cloudfront.net`) to the list
+> 3. Set the flag to **Enabled** and relaunch Chrome
+
+---
+
 ## Routine use
 
 ### Deploy backend changes
