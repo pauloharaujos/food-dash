@@ -23,6 +23,9 @@ export class OrderConsumerService implements OnModuleInit, OnModuleDestroy {
 
   private initializeConsumer() {
     const queueUrl = process.env.AWS_SQS_QUEUE_URL;
+    if (!queueUrl) {
+      throw new Error('Missing required environment variable: AWS_SQS_QUEUE_URL');
+    }
     const endpoint = process.env.AWS_ENDPOINT_URL;
 
     this.consumer = Consumer.create({
