@@ -193,7 +193,7 @@ To trigger the redeploy via the GitHub Actions UI:
 >
 > To allow it in Chrome for your session:
 > 1. Go to `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
-> 2. Add your CloudFront URL (e.g. `https://d39too7dg51py8.cloudfront.net`) to the list
+> 2. Add your ALB Backend URL (e.g. `http://fooddash-alb-975784403.us-east-1.elb.amazonaws.com,ws://fooddash-alb-975784403.us-east-1.elb.amazonaws.com/graphql`) to the list
 > 3. Set the flag to **Enabled** and relaunch Chrome
 
 ---
