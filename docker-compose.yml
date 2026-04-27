@@ -1,0 +1,40 @@
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: fooddash_database
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hsda232nsa!2311
+      POSTGRES_DB: fooddash_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  localstack:
+    image: localstack/localstack:latest
+    container_name: fooddash_aws
+    ports:
+      - "4566:4566"            # LocalStack Edge Port (Gateway)
+      - "4510-4559:4510-4559"  # Port range for various services
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./infra/localstack:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  redis:
+    image: redis:7-alpine
+    container_name: fooddash_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres_data:
+  redis_data:
