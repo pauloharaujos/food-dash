@@ -2,6 +2,8 @@
 
 Food Dash is a real-time food delivery tracking platform built as an event-driven microservice architecture. The system combines a React frontend with a NestJS backend and is designed for full deployment on AWS.
 
+Watch the Project Explanation Here: youtu.be/xzBQLHGxbuk
+
 ## Architecture Diagram
 
 ![Food Dash architecture](./food_dash_diagram.png)
