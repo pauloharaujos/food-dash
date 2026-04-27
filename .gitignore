@@ -60,3 +60,24 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 #Localstack
 /infra/localstack
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files (may contain sensitive data)
+*.tfplan
+
+# Crash logs
+crash.log
+
+# Sensitive vars files (if you create them later)
+*.tfvars
+*.tfvars.json
+
+# Override files
+override.tf
+override.tf.json

@@ -1,8 +1,8 @@
 #!/usr/bin/env npx ts-node
 /**
- * Sends order create/update messages to the LocalStack SQS queue.
+ * Sends order create/update messages to an SQS queue.
  *
- * Prerequisites: LocalStack running (docker compose up -d) and queue created.
+ * Works against both LocalStack (local dev) and real AWS (production).
  *
  * Usage:
  *   npm run script:send-order                # send create + update
@@ -10,17 +10,19 @@
  *   npm run script:send-order update         # send update for order id 1
  *   npm run script:send-order update 5       # send update for order id 5
  *
- * AWS CLI alternative (requires AWS CLI):
- *   aws --endpoint-url=http://localhost:4566 sqs send-message \
- *     --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/food-dash-order-updates \
- *     --message-body '{"type":"create","order":{"subtotal":2999,"total":3299,"status":"PREPARING","address":{...},"items":[...]}}'
+ * Environment variables (can be set in .env or inline):
+ *   AWS_SQS_QUEUE_URL   — required; queue URL (set in .env for local dev, or pass inline for real AWS)
+ *   AWS_REGION          — defaults to us-east-1
  */
 
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { config } from 'dotenv';
 
-const QUEUE_URL =
-  'http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/food-dash-order-updates';
-const ENDPOINT = 'http://localhost:4566';
+config(); // load .env
+
+const QUEUE_URL = process.env.AWS_SQS_QUEUE_URL;
+
+const ENDPOINT = process.env.AWS_ENDPOINT_URL;
 
 const createOrderMessage = {
   type: 'create',
@@ -51,10 +53,12 @@ const updateOrderMessage = (orderId: string) => ({
 });
 
 async function sendMessage(body: object) {
+  if (!QUEUE_URL) throw new Error('AWS_SQS_QUEUE_URL is not set in environment or .env');
+
   const client = new SQSClient({
-    endpoint: ENDPOINT,
-    region: 'us-east-1',
-    credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+    ...(ENDPOINT ? { endpoint: ENDPOINT } : {}),
+    region: process.env.AWS_REGION ?? 'us-east-1',
+    ...(ENDPOINT ? { credentials: { accessKeyId: 'test', secretAccessKey: 'test' } } : {}),
   });
 
   const result = await client.send(
