@@ -1,98 +1,147 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Food Dash
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Food Dash is a real-time food delivery tracking platform built as an event-driven microservice architecture. The system combines a React frontend with a NestJS backend and is designed for full deployment on AWS.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Architecture Diagram
 
-## Description
+![Food Dash architecture](./food_dash_diagram.png)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture Overview
 
-## Project setup
+Food Dash is organized around loosely coupled services that communicate through asynchronous messaging and real-time updates:
 
-```bash
-$ npm install
+- React frontend in `frontend/` provides the live order dashboard.
+- NestJS backend in `src/` exposes the GraphQL API and coordinates order workflows.
+- AWS SQS acts as the event ingestion layer for order status updates.
+- Redis powers pub/sub fan-out for real-time GraphQL subscriptions.
+- PostgreSQL with Prisma persists orders, addresses, and order items.
+- Terraform is used to provision AWS infrastructure for cloud deployment.
+
+The delivery flow is:
+
+1. An external producer publishes order events into AWS SQS.
+2. The NestJS worker consumes and processes the messages.
+3. The backend updates PostgreSQL through Prisma.
+4. Redis broadcasts status changes.
+5. The React dashboard receives updates through GraphQL subscriptions and refreshes in real time.
+
+## Tech Stack
+
+### Frontend
+
+- React 19
+- Vite
+- Apollo Client
+- GraphQL subscriptions over WebSockets
+
+### Backend
+
+- NestJS
+- GraphQL with Apollo
+- Prisma ORM
+- PostgreSQL
+- Redis
+- AWS SDK for SQS
+
+### Infrastructure
+
+- AWS for production deployment
+- Terraform for infrastructure as code
+- Docker Compose and LocalStack for local development
+
+## Repository Structure
+
+```text
+food-dash/
+├── frontend/         # React application and Apollo client
+├── src/              # NestJS API, resolvers, services, and workers
+├── prisma/           # Prisma schema and migrations
+├── redis/            # Redis integration module
+├── scripts/          # Utility scripts for SQS setup and test messages
+├── infra/            # LocalStack state and local AWS emulation assets
+└── terraform/        # Terraform deployment assets
 ```
 
-## Compile and run the project
+## Local Development
+
+### Prerequisites
+
+- Node.js
+- npm
+- Docker and Docker Compose
+
+### Install dependencies
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
+cd frontend && npm install
 ```
 
-## Run tests
+### Start local infrastructure
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
+This starts:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- PostgreSQL
+- Redis
+- LocalStack with SQS support
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Run the backend
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Run the frontend
 
-## Resources
+```bash
+cd frontend
+npm run dev
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Useful Commands
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Backend
 
-## Support
+```bash
+npm run build
+npm run start:dev
+npm run test
+npm run test:e2e
+npm run lint
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Frontend
 
-## Stay in touch
+```bash
+cd frontend
+npm run dev
+npm run build
+npm run lint
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### SQS Helper Scripts
+
+```bash
+npm run script:create-queue
+npm run script:send-order
+```
+
+## AWS Deployment
+
+The application is structured to run fully on AWS as a cloud-native, event-driven system:
+
+- the frontend can be deployed as a static React application,
+- the NestJS backend can be deployed as the API and worker service,
+- AWS SQS handles asynchronous order event delivery,
+- managed data services back the real-time and persistence layers,
+- Terraform manages the infrastructure definition.
+
+For local development, the repository uses Docker Compose and LocalStack to mirror the production architecture as closely as possible.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the terms in [LICENSE](./LICENSE).
