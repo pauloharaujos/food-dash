@@ -2,7 +2,7 @@ name: 'FoodDash Frontend — Build & Deploy'
 
 on:
   push:
-    branches: [ "feature/implement-terraform-for-aws-infrastructure" ]
+    branches: [ "main" ]
     paths:
       - 'frontend/**'
       - 'terraform/frontend/**'

@@ -2,7 +2,7 @@ name: 'FoodDash Backend — Infrastructure & Deploy'
 
 on:
   push:
-    branches: [ "feature/implement-terraform-for-aws-infrastructure" ]
+    branches: [ "main" ]
     paths:
       - 'src/**'
       - 'prisma/**'
